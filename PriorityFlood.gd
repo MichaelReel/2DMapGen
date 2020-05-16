@@ -1,5 +1,8 @@
 extends TextureRect
 
+const REDRAW_PER_LOOP : int = 1000
+var drawThread : Thread
+
 class Pixel:
 	# Notes:
 	# - Using pixels for height, closed, water
@@ -88,7 +91,6 @@ class ImageHeightSorter:
 		return output
 
 func _ready():
-	var imageTexture := ImageTexture.new()
 	var noise : OpenSimplexNoise = OpenSimplexNoise.new()
 	var width : int = -self.margin_right
 	var height : int = -self.margin_bottom
@@ -100,7 +102,10 @@ func _ready():
 	noise.persistence = 1.1
 	
 	var noiseImage : Image = noise.get_image(width, height)
+	drawThread = Thread.new()
+	drawThread.start(self, "perform_priority_flood", noiseImage)
 	
+func perform_priority_flood(noiseImage: Image):
 	# Convert Image to red only
 	noiseImage.lock()
 	for y in range(0, noiseImage.get_height()):
@@ -124,13 +129,25 @@ func _ready():
 		sorter.insert(Vector2(x, 0))
 		sorter.insert(Vector2(x, y_max))
 	
+	var imageTexture := ImageTexture.new()
 	# Start flooding
+	var redraw = 0
 	while sorter.open():
 		var c = sorter.pop()
 		var ns = sorter.get_open_neighbours(c.pos)
 		for pos in ns:
 			var n = sorter.insert(pos)
 			n.flood(c.water())
+		redraw -= 1
+		if redraw <= 0:
+			# Temp unlock the image so we can draw the progress
+			noiseImage.unlock()
+			
+			imageTexture.create_from_image(noiseImage)
+			self.texture = imageTexture
+			
+			redraw = REDRAW_PER_LOOP
+			noiseImage.lock()
 	noiseImage.unlock()
 	
 	# Strip closed flags
@@ -138,16 +155,14 @@ func _ready():
 	for y in range(0, noiseImage.get_height()):
 		for x in range(0, noiseImage.get_width()):
 			var col := noiseImage.get_pixel(x, y)
-			col.g = col.r
 			if col.b == col.r:
-				col.b = 0.0
+				col = Color(col.r, 1.0, col.r, 1.0)
+			else:
+				col = Color(col.b, col.b, 1.0, 1.0)
 			noiseImage.set_pixel(x, y, col)
 	noiseImage.unlock()
 	
 	imageTexture.create_from_image(noiseImage)
 	self.texture = imageTexture
-	
-	imageTexture.resource_name = "The created texture!"
-	print(self.texture.resource_name)
 	
 	pass
