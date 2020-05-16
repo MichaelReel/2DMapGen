@@ -2,6 +2,7 @@ extends TextureRect
 
 const REDRAW_PER_LOOP : int = 1000
 var drawThread : Thread
+var closing : bool = false
 
 class Pixel:
 	# Notes:
@@ -15,9 +16,17 @@ class Pixel:
 		self.image = i
 		self.pos = p
 	
-	func close():
+	func close(c : Pixel):
 		var col := image.get_pixelv(pos)
-		col.g = 1.0
+		if c == null:
+			col.g = 1.0
+		else:
+			# Determine direction c is in and set col.g accordingly
+			var dirv : Vector2 = self.pos - c.pos
+			var dir = ((dirv.angle() / PI) + 1) / 2.5
+			col.g = dir
+			
+			
 		image.set_pixelv(pos, col)
 	
 	func height() -> float:
@@ -35,6 +44,7 @@ class Pixel:
 
 class ImageHeightSorter:
 	var priorityList : Array = []
+	var plainQueue : Array = []
 	var image : Image
 	
 	func _init(i : Image):
@@ -43,18 +53,24 @@ class ImageHeightSorter:
 	static func sort(a: Pixel, b: Pixel) -> bool:
 		return a.height() > b.height()
 	
-	func insert(pos : Vector2) -> Pixel:
+	func insert(pos: Vector2, c: Pixel):
 		var new_pos := Pixel.new(self.image, pos)
-		var index := priorityList.bsearch_custom(new_pos, ImageHeightSorter, "sort")
-		priorityList.insert(index, new_pos)
-		new_pos.close()
-		return new_pos
+		new_pos.close(c)
+		
+		if c != null and new_pos.water() <= c.water():
+			new_pos.flood(c.water())
+			plainQueue.append(new_pos)
+		else:
+			var index := priorityList.bsearch_custom(new_pos, ImageHeightSorter, "sort")
+			priorityList.insert(index, new_pos)
 	
 	func open() -> bool:
-		return not priorityList.empty()
+		return not priorityList.empty() or not plainQueue.empty()
 	
 	func pop() -> Pixel:
-		var pixel = priorityList.pop_back()
+		var pixel = plainQueue.pop_back()
+		if pixel == null:
+			pixel = priorityList.pop_back()
 		return pixel
 		
 	func is_closed(pos : Vector2) -> bool:
@@ -84,21 +100,21 @@ class ImageHeightSorter:
 		# Takes just over 3 minutes when included (181 seconds)
 		# And just under 2 minutes when excluded (113 seconds)
 		
-#		var nxny = Vector2(pos.x - 1, pos.y - 1)
-#		if (pos.x > 0 and pos.y > 0 and not is_closed(nxny)):
-#			ns.append(nxny)
-#
-#		var pxny = Vector2(pos.x + 1, pos.y - 1)
-#		if (pos.x < image.get_width() - 1 and pos.y > 0 and not is_closed(pxny)):
-#			ns.append(pxny)
-#
-#		var nxpy = Vector2(pos.x - 1, pos.y + 1)
-#		if (pos.x > 0 and pos.y < image.get_height() - 1 and not is_closed(nxpy)):
-#			ns.append(nxpy)
-#
-#		var pxpy = Vector2(pos.x + 1, pos.y + 1)
-#		if (pos.x < image.get_width() - 1 and pos.y < image.get_height() - 1 and not is_closed(pxpy)):
-#			ns.append(pxpy)
+		var nxny = Vector2(pos.x - 1, pos.y - 1)
+		if (pos.x > 0 and pos.y > 0 and not is_closed(nxny)):
+			ns.append(nxny)
+
+		var pxny = Vector2(pos.x + 1, pos.y - 1)
+		if (pos.x < image.get_width() - 1 and pos.y > 0 and not is_closed(pxny)):
+			ns.append(pxny)
+
+		var nxpy = Vector2(pos.x - 1, pos.y + 1)
+		if (pos.x > 0 and pos.y < image.get_height() - 1 and not is_closed(nxpy)):
+			ns.append(nxpy)
+
+		var pxpy = Vector2(pos.x + 1, pos.y + 1)
+		if (pos.x < image.get_width() - 1 and pos.y < image.get_height() - 1 and not is_closed(pxpy)):
+			ns.append(pxpy)
 		
 		return ns
 	
@@ -126,6 +142,7 @@ func _ready():
 	drawThread.start(self, "perform_priority_flood", noiseImage)
 
 func _exit_tree():
+	closing = true
 	drawThread.wait_to_finish()
 	
 func perform_priority_flood(noiseImage: Image):
@@ -145,12 +162,12 @@ func perform_priority_flood(noiseImage: Image):
 	# Add edge pixels to queue
 	var x_max := noiseImage.get_width() - 1
 	for y in range(0, noiseImage.get_height()):
-		sorter.insert(Vector2(0, y))
-		sorter.insert(Vector2(x_max, y))
+		sorter.insert(Vector2(0, y), null)
+		sorter.insert(Vector2(x_max, y), null)
 	var y_max := noiseImage.get_height() - 1
 	for x in range(1, x_max):
-		sorter.insert(Vector2(x, 0))
-		sorter.insert(Vector2(x, y_max))
+		sorter.insert(Vector2(x, 0), null)
+		sorter.insert(Vector2(x, y_max), null)
 	
 	var imageTexture := ImageTexture.new()
 	# Start flooding
@@ -159,8 +176,8 @@ func perform_priority_flood(noiseImage: Image):
 		var c = sorter.pop()
 		var ns = sorter.get_open_neighbours(c.pos)
 		for pos in ns:
-			var n = sorter.insert(pos)
-			n.flood(c.water())
+			sorter.insert(pos, c)
+		# Draw progress
 		redraw -= 1
 		if redraw <= 0:
 			# Temp unlock the image so we can draw the progress
@@ -171,7 +188,12 @@ func perform_priority_flood(noiseImage: Image):
 			
 			redraw = REDRAW_PER_LOOP
 			noiseImage.lock()
+		if closing:
+			break
 	noiseImage.unlock()
+	
+	imageTexture.create_from_image(noiseImage)
+	self.texture = imageTexture
 	
 	# Post processing tidy-up
 	noiseImage.lock()

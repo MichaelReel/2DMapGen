@@ -9,7 +9,7 @@ func _ready():
 	# Configure noise
 	noise.seed = randi()
 	noise.octaves = 4
-	noise.period = 400.0
+	noise.period = 200.0
 	noise.persistence = 1.1
 
 	var noiseImage : Image = noise.get_image(-self.margin_right, -self.margin_bottom)
