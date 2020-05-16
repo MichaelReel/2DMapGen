@@ -80,6 +80,26 @@ class ImageHeightSorter:
 		if (pos.y < image.get_height() - 1 and not is_closed(py)):
 			ns.append(py)
 		
+		# Including diagonals has this affect on the algorithm:
+		# Takes just over 3 minutes when included (181 seconds)
+		# And just under 2 minutes when excluded (113 seconds)
+		
+#		var nxny = Vector2(pos.x - 1, pos.y - 1)
+#		if (pos.x > 0 and pos.y > 0 and not is_closed(nxny)):
+#			ns.append(nxny)
+#
+#		var pxny = Vector2(pos.x + 1, pos.y - 1)
+#		if (pos.x < image.get_width() - 1 and pos.y > 0 and not is_closed(pxny)):
+#			ns.append(pxny)
+#
+#		var nxpy = Vector2(pos.x - 1, pos.y + 1)
+#		if (pos.x > 0 and pos.y < image.get_height() - 1 and not is_closed(nxpy)):
+#			ns.append(nxpy)
+#
+#		var pxpy = Vector2(pos.x + 1, pos.y + 1)
+#		if (pos.x < image.get_width() - 1 and pos.y < image.get_height() - 1 and not is_closed(pxpy)):
+#			ns.append(pxpy)
+		
 		return ns
 	
 	func debug() -> String:
@@ -104,6 +124,9 @@ func _ready():
 	var noiseImage : Image = noise.get_image(width, height)
 	drawThread = Thread.new()
 	drawThread.start(self, "perform_priority_flood", noiseImage)
+
+func _exit_tree():
+	drawThread.wait_to_finish()
 	
 func perform_priority_flood(noiseImage: Image):
 	# Convert Image to red only
@@ -150,7 +173,7 @@ func perform_priority_flood(noiseImage: Image):
 			noiseImage.lock()
 	noiseImage.unlock()
 	
-	# Strip closed flags
+	# Post processing tidy-up
 	noiseImage.lock()
 	for y in range(0, noiseImage.get_height()):
 		for x in range(0, noiseImage.get_width()):
@@ -165,4 +188,3 @@ func perform_priority_flood(noiseImage: Image):
 	imageTexture.create_from_image(noiseImage)
 	self.texture = imageTexture
 	
-	pass
