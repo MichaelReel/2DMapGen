@@ -26,7 +26,6 @@ class Pixel:
 			var dir = ((dirv.angle() / PI) + 1) / 2.5
 			col.g = dir
 			
-			
 		image.set_pixelv(pos, col)
 	
 	func height() -> float:
@@ -36,6 +35,10 @@ class Pixel:
 	func water() -> float:
 		var col := image.get_pixelv(pos)
 		return col.b
+	
+	func no_flow() -> bool:
+		var col := image.get_pixelv(pos)
+		return col.g == 1.0
 	
 	func flood(h : float):
 		var col := image.get_pixelv(pos)
@@ -100,21 +103,21 @@ class ImageHeightSorter:
 		# Takes just over 3 minutes when included (181 seconds)
 		# And just under 2 minutes when excluded (113 seconds)
 		
-		var nxny = Vector2(pos.x - 1, pos.y - 1)
-		if (pos.x > 0 and pos.y > 0 and not is_closed(nxny)):
-			ns.append(nxny)
-
-		var pxny = Vector2(pos.x + 1, pos.y - 1)
-		if (pos.x < image.get_width() - 1 and pos.y > 0 and not is_closed(pxny)):
-			ns.append(pxny)
-
-		var nxpy = Vector2(pos.x - 1, pos.y + 1)
-		if (pos.x > 0 and pos.y < image.get_height() - 1 and not is_closed(nxpy)):
-			ns.append(nxpy)
-
-		var pxpy = Vector2(pos.x + 1, pos.y + 1)
-		if (pos.x < image.get_width() - 1 and pos.y < image.get_height() - 1 and not is_closed(pxpy)):
-			ns.append(pxpy)
+#		var nxny = Vector2(pos.x - 1, pos.y - 1)
+#		if (pos.x > 0 and pos.y > 0 and not is_closed(nxny)):
+#			ns.append(nxny)
+#
+#		var pxny = Vector2(pos.x + 1, pos.y - 1)
+#		if (pos.x < image.get_width() - 1 and pos.y > 0 and not is_closed(pxny)):
+#			ns.append(pxny)
+#
+#		var nxpy = Vector2(pos.x - 1, pos.y + 1)
+#		if (pos.x > 0 and pos.y < image.get_height() - 1 and not is_closed(nxpy)):
+#			ns.append(nxpy)
+#
+#		var pxpy = Vector2(pos.x + 1, pos.y + 1)
+#		if (pos.x < image.get_width() - 1 and pos.y < image.get_height() - 1 and not is_closed(pxpy)):
+#			ns.append(pxpy)
 		
 		return ns
 	
@@ -170,6 +173,7 @@ func perform_priority_flood(noiseImage: Image):
 		sorter.insert(Vector2(x, y_max), null)
 	
 	var imageTexture := ImageTexture.new()
+	var drainPoints : Array = []
 	# Start flooding
 	var redraw = 0
 	while sorter.open():
@@ -205,7 +209,13 @@ func perform_priority_flood(noiseImage: Image):
 			else:
 				col = Color(col.b, col.b, 1.0, 1.0)
 			noiseImage.set_pixel(x, y, col)
+	
+	var col = Color(1.0, 0.0, 1.0, 1.0)
+	for p in drainPoints:
+		noiseImage.set_pixelv(p.pos, col)
+	
 	noiseImage.unlock()
+
 	
 	imageTexture.create_from_image(noiseImage)
 	self.texture = imageTexture
