@@ -8,23 +8,31 @@ func _ready():
 	var width : int = rect_size.x
 	var height : int = rect_size.y
 	var step := 1.0  # Lower == more discrete layers
-	var bias := 0.6  # Average "brightness" of colours
+	var bias := 0.5  # Average "brightness" of colours
+
+	var octaves = 3
+	var period = 64.0
+	var persistence = 0.5
+	var lacunarity = 2.0
 
 	# Configure noise
 	noiseR.seed = 1
-	noiseR.octaves = 3
-	noiseR.period = 100.0
-	noiseR.persistence = 0.9
+	noiseR.set_octaves(octaves)
+	noiseR.set_period(period)
+	noiseR.set_persistence(persistence)
+	noiseR.set_lacunarity(lacunarity)
 	
 	noiseG.seed = 2
-	noiseG.octaves = 3
-	noiseG.period = 100.0
-	noiseG.persistence = 0.9
+	noiseG.set_octaves(octaves)
+	noiseG.set_period(period)
+	noiseG.set_persistence(persistence)
+	noiseG.set_lacunarity(lacunarity)
 	
 	noiseB.seed = 3
-	noiseB.octaves = 3
-	noiseB.period = 100.0
-	noiseB.persistence = 0.9
+	noiseB.set_octaves(octaves)
+	noiseB.set_period(period)
+	noiseB.set_persistence(persistence)
+	noiseB.set_lacunarity(lacunarity)
 
 	var noiseImage : Image = Image.new()
 	noiseImage.create(width, height, false, Image.FORMAT_RGBA8)
@@ -41,8 +49,6 @@ func _ready():
 
 	imageTexture.create_from_image(noiseImage)
 	self.texture = imageTexture
-	
-	imageTexture.resource_name = "The created texture!"
-	print(self.texture.resource_name)
+	imageTexture.resource_name = "Compound Simplex"
 	
 	pass
