@@ -47,25 +47,16 @@ class GridTriangle:
 	
 	static func calculate_circumcenter(vA : Vector2, vB : Vector2, vC : Vector2) -> Vector2:
 		var result : Vector2 = Vector2()
-		
-		var mAB : Vector2 = (vA + vB) / 2
-		var mBC : Vector2 = (vB + vC) / 2
-		
-		var dAB : Vector2 = (vB - vA)
-		var dBC : Vector2 = (vC - vB)
-		
-		if dAB == Vector2.ZERO or dBC == Vector2.ZERO:
-			print ("CC ERR: " + "NOT A TRIANGLE" + " from: " + str(vA) + " / " + str(vB) + " / " + str(vC))
-		else:
-			var a = -dAB.aspect()
-			var a1 = mAB.y - (a * mAB.x)
-			var b = -dBC.aspect()
-			var b1 = mBC.y - (b * mBC.x)
-			if a == b:
-				print ("CC ERR: " + "CO-LINEAR TRIANGLE" + " from: " + str(vA) + " / " + str(vB) + " / " + str(vC))
-			else:
-				result.x = -((a1 + (-b1)) / ((-b) + a))
-				result.y = (b * result.x) + b1
+		var temp = (vB.y * vC.x) - (vB.y * vA.x) - (vA.y * vC.x) - (vC.y * vB.x) + (vC.y * vA.x) + (vA.y * vB.x)
+		if temp == 0:
+			print("The three points entered are collinear (on the same line), so they don't form a triangle. Circumcenter can't be calculated.")
+		else :
+			var dia = 2 * (vA.x * (vB.y - vC.y) + vB.x * (vC.y - vA.y) + vC.x * (vA.y - vB.y))
+			var firstsq = ((vA.x * vA.x) + (vA.y * vA.y))
+			var secondsq = ((vB.x * vB.x) + (vB.y * vB.y))
+			var thirdsq = ((vC.x * vC.x) + (vC.y * vC.y))
+			result.x = (firstsq * (vB.y - vC.y) + secondsq * (vC.y - vA.y) + thirdsq * (vA.y - vB.y)) / dia
+			result.y = (firstsq * (vC.x - vB.x) + secondsq * (vA.x - vC.x) + thirdsq * (vB.x - vA.x)) / dia
 		
 		return result
 
@@ -128,7 +119,7 @@ class VoronoiEdge:
 		v2 = b
 	
 	func draw(canvas : CanvasItem, color: Color):
-		canvas.draw_line(v1, v2, color)	
+		canvas.draw_line(v1, v2, color)
 
 func _ready():
 	# Create initial array of points
