@@ -44,6 +44,8 @@ class GridTriangle:
 	func draw(canvas : CanvasItem, color: Color):
 		canvas.draw_polyline(points, color)
 		canvas.draw_circle(circ_cent, 1.0, color)
+		for p in points:
+			canvas.draw_circle(p, 2.0, color)
 	
 	static func calculate_circumcenter(vA : Vector2, vB : Vector2, vC : Vector2) -> Vector2:
 		var result : Vector2 = Vector2()
@@ -122,11 +124,21 @@ class VoronoiEdge:
 		canvas.draw_line(v1, v2, color)
 
 func _ready():
+	# Really this sets up a kind of pseudo-delaunay graph
+	# Really just a grid of variable-sized triangles
+	# This simiplies lots of stuff, avoids using fortunes
+	# and generally takes almost no time at all
+	
 	# Create initial array of points
 	for y in range(0, height - POINT_SPACE, POINT_SPACE):
 		var point_row : Array = []
 		for x in range(0, width - POINT_SPACE, POINT_SPACE):
-			var new_point = Vector2(x + randi() % (POINT_SPACE - SPACE_PAD), y + randi() % (POINT_SPACE - SPACE_PAD))
+			# Don't stray further than POINT_SPACE - SPACE_PAD from the anchor
+			var distance = randi() % (POINT_SPACE - SPACE_PAD)
+			var angle = randf() * (PI / 2)
+			var new_x = x + cos(angle) * distance
+			var new_y = y + sin(angle) * distance
+			var new_point = Vector2(new_x, new_y)
 			point_row.append(new_point)
 		point_grid.append(point_row)
 
