@@ -3,8 +3,10 @@
 [ext_resource path="res://Fortunes.gd" type="Script" id=1]
 
 [node name="Fortunes" type="TextureRect"]
-margin_right = 1024.0
-margin_bottom = 600.0
+margin_left = 10.0
+margin_top = 10.0
+margin_right = 1012.0
+margin_bottom = 590.0
 script = ExtResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
