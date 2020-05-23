@@ -8,7 +8,7 @@ const TRY_LIMIT = 10000
 
 onready var width : int = rect_size.x
 onready var height : int = rect_size.y
-onready var Algorithm = load("res://lib/FortunesVoronoi.gd")
+onready var Algorithm = load("res://lib/FortunesVoronoi01.gd")
 
 var init_sites : SortedVectorArray
 var result_sites : Array
@@ -48,9 +48,6 @@ func _ready():
 	
 	algorithm.set_bounds_2D(Rect2(Vector2.ZERO, rect_size))
 	result_sites = algorithm.get_voronoi_2D(init_sites.x_sorted)
-	
-#	for rsite in result_sites:
-#		rsite.bounds.append(rsite.bounds[0])
 	
 func _draw():
 	# Take advantage of the inherited CanvasItem capability
