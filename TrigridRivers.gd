@@ -1,9 +1,11 @@
 extends TextureRect
 
 const TRI_SIDE : float = 50.0
+const TRI_HEIGHT : float = sqrt( 0.75 * (TRI_SIDE * TRI_SIDE))
 const MIN_DEPTH : float = 1.0
 const START_DEPTH : float = 25.0
 const DEPTH_CHANGE : float = 1.0
+const RADIUS : float = TRI_SIDE * sin(PI / 6) / 2
 
 onready var width := rect_size.x
 onready var height := rect_size.y
@@ -44,9 +46,8 @@ class TriGrid:
 	var sources := []
 	
 	func _init(width : float, height : float):
-		var height_diff : float = sqrt( 0.75 * (TRI_SIDE * TRI_SIDE))
 		var row_ind : int = 0
-		for y in range (0.0, height, height_diff):
+		for y in range (0.0, height, TRI_HEIGHT):
 			var points_row := []
 			var ind_offset := (row_ind % 2) * 2 - 1
 			var offset := (row_ind % 2) * (TRI_SIDE / 2)
@@ -109,60 +110,93 @@ class TriGrid:
 				canvas.draw_circle(point.pos, 2.0, color)
 				for conn in point.connections:
 					canvas.draw_line(point.pos, conn.pos, color, 0.5)
-					
-	func draw_flows(canvas : CanvasItem, color : Color):
-		
+	
+	func draw_flow_debug(canvas : CanvasItem, dcolor : Color):
 		for source in sources:
-			var curve := Curve2D.new()
-			var point = source
-#		var curve := Curve2D.new()
-#		var point = sources[0]
-			var control_out : Vector2 = point.downstream.pos - point.pos
-			var control_in : Vector2 = Vector2()
-			while (point.downstream != null):
-				curve.add_point(point.pos, control_in, control_out)
+			canvas.draw_circle(source.pos, 3.0, dcolor)
+			var point : TriPoint = source
+			while not point.drawn:
+				canvas.draw_line(point.pos, point.downstream.pos, dcolor, point.depth)
+				point.drawn = true
 				if point.downstream == point:
 					break
-				control_in = -control_out 
-				control_out = (point.downstream.pos - point.pos) / TRI_SIDE
 				point = point.downstream
-			canvas.draw_polyline(curve.get_baked_points(), color, 2.0)
-
-#		for source in sources:
-#			var curve := Curve2D.new()
-#			var point = source
-#			while (point.downstream != null):
-#				curve.add_point(point.pos)
-#				if point.downstream == point:
-#					break
-#				point = point.downstream
-#			canvas.draw_polyline(curve.get_baked_points(), color, 2.0)
-
-#		var point = sources[0]
-#		while (point.downstream != null):
-#			canvas.draw_line(point.pos, point.downstream.pos, color, point.depth)
-#			point.drawn = true
-#			if point.downstream == point:
-#				break
-#			point = point.downstream
-			
+	
+	func draw_flows(canvas : CanvasItem, color : Color):
+		# Attempt to draw river curves
+		for source in sources:
+			var point : TriPoint = source
+			var last_pos : Vector2 = point.pos - (point.downstream.pos - point.pos)
+			while true:
+				_draw_connection(canvas, color, last_pos, point.pos, point.downstream.pos, point.depth)
+				point.drawn = true
+				if point.downstream == point:
+					break
+				last_pos = point.pos
+				point = point.downstream
+	
+	func _draw_connection(canvas : CanvasItem, color : Color, a : Vector2, b : Vector2, c : Vector2, line_width : float):
+		# Draw from the mid point of the 2 lines either a line, or an arc
+		var mid_ab = a.linear_interpolate(b, 0.5)
+		var mid_bc = b.linear_interpolate(c, 0.5)
 		
-#		for source in sources:
-##			canvas.draw_circle(source.pos, 3.0, color)
-#			var point : TriPoint = source
-#			while (point.downstream != null and not point.drawn):
-#				canvas.draw_line(point.pos, point.downstream.pos, color, point.depth)
-#				point.drawn = true
-#				if point.downstream == point:
-#					break
-#				point = point.downstream
+		if ccw(a, b, c) == 0:
+			# Collinear points, draw a straight line, then we're done
+			canvas.draw_line(mid_ab, mid_bc, color, line_width)
+			return
+		elif mid_ab.distance_to(mid_bc) <= TRI_SIDE * 0.5:
+			# Tight acute equalateral curve
+			var center : Vector2 = (a + b + c) / 3
+			var start_angle : float = (mid_ab - center).angle()
+			var end_angle : float = (mid_bc - center).angle()
+			# Need to know when to go CCW instead
+#			if (end_angle - start_angle > PI):
+#				print ("s: " + str(start_angle) + ", e: " + str(end_angle) )
+#				var temp = start_angle
+#				start_angle = end_angle
+#				end_angle = temp
+			
+			canvas.draw_arc(center, RADIUS, start_angle, end_angle, 10, color, line_width)
+#		else:
+#			# Tight acute equalateral curve
+#			var center : Vector2 = a + (c - b)
+#			var start_angle : float = (mid_ab - center).angle()
+#			var end_angle : float = (mid_bc - center).angle()
+#			canvas.draw_arc(center, TRI_HEIGHT, start_angle, end_angle, 20, color, line_width)
 
+	static func ccw(a, b, c):
+		# Returns -1: clockwise, 0: collinear, 1:anti-clockwise 
+		var area2 = (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+		if area2 < 0:
+			return -1
+		elif area2 > 0:
+			return +1
+		else:
+			return 0
 
 func _ready():
+	print (str(Vector2.LEFT.angle()))
+	print (str(Vector2.UP.angle()))
+	print (str(Vector2.RIGHT.angle()))
+	print (str(Vector2.DOWN.angle()))
+	
+	print (str(Vector2.RIGHT.angle_to(Vector2.LEFT)))
+	print (str(Vector2.RIGHT.angle_to(Vector2.UP)))
+	print (str(Vector2.RIGHT.angle_to(Vector2.RIGHT)))
+	print (str(Vector2.RIGHT.angle_to(Vector2.DOWN)))
+	
+	var right_down := Vector2.RIGHT + Vector2.DOWN
+	print (str(right_down))
+	print (str(right_down.angle_to(Vector2.LEFT)))
+	print (str(right_down.angle_to(Vector2.UP)))
+	print (str(right_down.angle_to(Vector2.RIGHT)))
+	print (str(right_down.angle_to(Vector2.DOWN)))
+	
 	seed(1)
 	grid = TriGrid.new(width, height)
 	grid.flow_from(0, 6, START_DEPTH)
 	
 func _draw():
-#	grid.draw_guides(self, Color(1.0, 1.0, 1.0, 0.1))
+	grid.draw_guides(self, Color(1.0, 1.0, 1.0, 0.1))
+	grid.draw_flow_debug(self, Color(0.0, 1.0, 0.5, 0.1))
 	grid.draw_flows(self, Color(0.0, 0.5, 1.0, 1.0))
