@@ -2,7 +2,8 @@ extends TextureRect
 
 const TRI_SIDE : float = 50.0
 const MIN_DEPTH : float = 1.0
-const DEPTH_CHANGE : float = 1.0
+const START_DEPTH : float = 25.0
+const DEPTH_CHANGE : float = 0.5
 
 onready var width := rect_size.x
 onready var height := rect_size.y
@@ -16,12 +17,14 @@ class TriPoint:
 	var connections : Array
 	var downstream : TriPoint
 	var depth : float
+	var drawn : bool
 	
 	func _init(v, x, y):
 		pos = v
 		col = x
 		row = y
 		connections = []
+		drawn = false
 	
 	func set_neighbors(neighbors : Array):
 		connections = neighbors
@@ -36,6 +39,7 @@ class TriPoint:
 class TriGrid:
 	# A grid points that are triangular in placement
 	var points := []
+	var sources := []
 	
 	func _init(width : float, height : float):
 		var height_diff : float = sqrt( 0.75 * (TRI_SIDE * TRI_SIDE))
@@ -78,12 +82,16 @@ class TriGrid:
 			point.downstream = point # Sink
 		# Proportion a part of the depth to each available connection
 		if depth < MIN_DEPTH:
+			sources.append(point)
 			return
-#		var available = []
+		var available = []
 		for conn in point.connections:
 			if conn.downstream == null:
-#				available.append(conn)
-				flow_to(conn.col, conn.row, depth - DEPTH_CHANGE, point)
+				available.append(conn)
+		
+		available.shuffle()
+		for conn in available:
+			flow_to(conn.col, conn.row, point.depth - DEPTH_CHANGE, point)
 				
 	
 	func draw_guides(canvas : CanvasItem, color : Color):
@@ -95,14 +103,13 @@ class TriGrid:
 					canvas.draw_line(point.pos, conn.pos, color, 0.5)
 					
 	func draw_flows(canvas : CanvasItem, color : Color):
-		for row_ind in range (0, points.size()):
-			for col_ind in range (0, points[row_ind].size()):
-				var point = points[row_ind][col_ind]
-				canvas.draw_circle(point.pos, 2.0, color)
-				# TODO: Draw downstream connections!
-				if point.downstream != null:
-					canvas.draw_line(point.pos, point.downstream.pos, color, point.depth)
-
+		for source in sources:
+			canvas.draw_circle(source.pos, 3.0, color)
+			var point = source
+			while (point.downstream != null and not point.drawn):
+				canvas.draw_line(point.pos, point.downstream.pos, color, point.depth)
+				point.drawn = true
+				point = point.downstream
 
 func _ready():
 #   # This is really just starter debug to check dimension
@@ -112,9 +119,10 @@ func _ready():
 #	imageTexture.create_from_image(noiseImage)
 #	self.texture = imageTexture
 
+	seed(1)
 	grid = TriGrid.new(width, height)
-	grid.flow_to(0, 6, 50.0)
+	grid.flow_to(0, 6, START_DEPTH)
 	
 func _draw():
-	grid.draw_guides(self, Color(1.0, 1.0, 1.0, 0.1))
+#	grid.draw_guides(self, Color(1.0, 1.0, 1.0, 0.1))
 	grid.draw_flows(self, Color(0.0, 0.5, 1.0, 1.0))
