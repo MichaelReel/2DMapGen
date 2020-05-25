@@ -111,13 +111,51 @@ class TriGrid:
 					canvas.draw_line(point.pos, conn.pos, color, 0.5)
 					
 	func draw_flows(canvas : CanvasItem, color : Color):
+		
 		for source in sources:
-#			canvas.draw_circle(source.pos, 3.0, color)
-			var point : TriPoint = source
-			while (point.downstream != null and not point.drawn):
-				canvas.draw_line(point.pos, point.downstream.pos, color, point.depth)
-				point.drawn = true
+			var curve := Curve2D.new()
+			var point = source
+#		var curve := Curve2D.new()
+#		var point = sources[0]
+			var control_out : Vector2 = point.downstream.pos - point.pos
+			var control_in : Vector2 = Vector2()
+			while (point.downstream != null):
+				curve.add_point(point.pos, control_in, control_out)
+				if point.downstream == point:
+					break
+				control_in = -control_out 
+				control_out = (point.downstream.pos - point.pos) / TRI_SIDE
 				point = point.downstream
+			canvas.draw_polyline(curve.get_baked_points(), color, 2.0)
+
+#		for source in sources:
+#			var curve := Curve2D.new()
+#			var point = source
+#			while (point.downstream != null):
+#				curve.add_point(point.pos)
+#				if point.downstream == point:
+#					break
+#				point = point.downstream
+#			canvas.draw_polyline(curve.get_baked_points(), color, 2.0)
+
+#		var point = sources[0]
+#		while (point.downstream != null):
+#			canvas.draw_line(point.pos, point.downstream.pos, color, point.depth)
+#			point.drawn = true
+#			if point.downstream == point:
+#				break
+#			point = point.downstream
+			
+		
+#		for source in sources:
+##			canvas.draw_circle(source.pos, 3.0, color)
+#			var point : TriPoint = source
+#			while (point.downstream != null and not point.drawn):
+#				canvas.draw_line(point.pos, point.downstream.pos, color, point.depth)
+#				point.drawn = true
+#				if point.downstream == point:
+#					break
+#				point = point.downstream
 
 
 func _ready():
