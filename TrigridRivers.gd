@@ -149,20 +149,24 @@ class TriGrid:
 			var center : Vector2 = (a + b + c) / 3
 			var start_angle : float = (mid_ab - center).angle()
 			var end_angle : float = (mid_bc - center).angle()
-			# Need to know when to go CCW instead
-#			if (end_angle - start_angle > PI):
-#				print ("s: " + str(start_angle) + ", e: " + str(end_angle) )
-#				var temp = start_angle
-#				start_angle = end_angle
-#				end_angle = temp
-			
-			canvas.draw_arc(center, RADIUS, start_angle, end_angle, 10, color, line_width)
-#		else:
-#			# Tight acute equalateral curve
-#			var center : Vector2 = a + (c - b)
-#			var start_angle : float = (mid_ab - center).angle()
-#			var end_angle : float = (mid_bc - center).angle()
-#			canvas.draw_arc(center, TRI_HEIGHT, start_angle, end_angle, 20, color, line_width)
+			# Angles that go through +- PI need modifying
+			if (end_angle - start_angle) > PI:
+				end_angle -= 2 * PI
+			if (end_angle - start_angle) < -PI:
+				end_angle += 2 * PI
+
+			canvas.draw_arc(center, RADIUS * 1.125, start_angle, end_angle, RADIUS * 1.25, color, line_width)
+		else:
+#			# Open obtuse equalateral curve
+			var center : Vector2 = a + (c - b)
+			var start_angle : float = (mid_ab - center).angle()
+			var end_angle : float = (mid_bc - center).angle()
+			# Angles that go through +- PI need modifying
+			if (end_angle - start_angle) > PI:
+				end_angle -= 2 * PI
+			if (end_angle - start_angle) < -PI:
+				end_angle += 2 * PI
+			canvas.draw_arc(center, TRI_HEIGHT, start_angle, end_angle, 20, color, line_width)
 
 	static func ccw(a, b, c):
 		# Returns -1: clockwise, 0: collinear, 1:anti-clockwise 
@@ -197,6 +201,22 @@ func _ready():
 	grid.flow_from(0, 6, START_DEPTH)
 	
 func _draw():
-	grid.draw_guides(self, Color(1.0, 1.0, 1.0, 0.1))
-	grid.draw_flow_debug(self, Color(0.0, 1.0, 0.5, 0.1))
+	
+#	var center := Vector2(width / 4, height / 2)
+#	var radius := width / 8
+#	var start_angle := PI
+#	var end_angle := PI / 4
+#	var points : int = radius * 1.25
+#	var color := Color(0.5, 0.5, 1.0, 1.0)
+#	var line_width := height / 10
+#	var antialiased := false
+#
+#	draw_arc(center, radius, start_angle, end_angle, points, color, line_width, antialiased)
+#	center = Vector2(3 * width / 4, height / 2)
+#	start_angle = -3 * PI / 4
+#	end_angle = -2 * PI + 3 * PI / 4
+#	draw_arc(center, radius, start_angle, end_angle, points, color, line_width, antialiased)
+	
+#	grid.draw_guides(self, Color(1.0, 1.0, 1.0, 0.1))
+#	grid.draw_flow_debug(self, Color(0.0, 1.0, 0.5, 0.1))
 	grid.draw_flows(self, Color(0.0, 0.5, 1.0, 1.0))
