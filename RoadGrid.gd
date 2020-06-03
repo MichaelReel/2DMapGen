@@ -7,8 +7,10 @@ onready var road_workers := []
 onready var ready := false
 
 const BACK_GROUND := Color8(32, 128, 32, 255)
-const SPLIT_MIN := 50
-const TRAVEL_MIN := 250
+const UNIT_SIZE := 30
+const MAX_UNITS := 2
+const TRAVEL_MIN := 200
+const TRAVEL_MAX := 250
 
 class RoadWorker:
 	var pos : Vector2
@@ -22,11 +24,12 @@ class RoadWorker:
 		dir = direction
 		col = color
 		dis = distance
+		block_dis = UNIT_SIZE * (randi() % MAX_UNITS + 1)
 		
 	func travel_forward(image : Image, worker_list : Array) -> bool:
 		pos += dir
 		dis += 1
-		block_dis += 1
+		block_dis -= 1
 		
 		# Are we still in bounds?
 		var bounds := Rect2(Vector2(), image.get_size())
@@ -43,12 +46,14 @@ class RoadWorker:
 		image.set_pixelv(pos, col)
 		
 		# Have we gone far enough to do something else?
-		if block_dis == SPLIT_MIN:
-			worker_list.append(RoadWorker.new(pos, dir.tangent(), col.lightened(0.1), dis))
-			block_dis = 0
-		
-			if dis >= TRAVEL_MIN:
+		if block_dis <= 0:
+			if dis >= TRAVEL_MAX:
 				return false
+				
+			worker_list.append(RoadWorker.new(pos, dir.tangent(), col.lightened(0.1), dis))
+			worker_list.append(RoadWorker.new(pos, dir.tangent().reflect(dir), col.lightened(0.1), dis))
+			
+			block_dis = UNIT_SIZE * (randi() % MAX_UNITS + 1)
 		
 		return true
 
