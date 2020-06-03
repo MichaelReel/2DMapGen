@@ -1,10 +1,12 @@
 extends TextureRect
 
-const TRI_SIDE : float = 50.0
+const RANDOM_SEED := 41
+
+const TRI_SIDE : float = 30.0
 const TRI_HEIGHT : float = sqrt( 0.75 * (TRI_SIDE * TRI_SIDE))
-const MIN_DEPTH : float = 1.0
+const MIN_DEPTH : float = 0.0
 const START_DEPTH : float = 25.0
-const DEPTH_CHANGE : float = 1.0
+const DEPTH_CHANGE : float = 0.5
 const RADIUS : float = TRI_SIDE * sin(PI / 6) / 2
 const DENSITY : float = 0.15
 
@@ -75,6 +77,25 @@ class TriGrid:
 			
 			#next row
 			row_ind += 1
+			
+		# Want to find a pseudorandom starting location on the edge
+		var edges : Array = [] + points[0] + points[points.size() - 1]
+		for row in points.slice(1, points.size() - 2):
+			edges += [row[0], row[row.size() - 1]]
+		edges.shuffle()
+		var start : TriPoint = edges[0]
+		
+		# Off grid point so river always leaves
+		var off_grid : TriPoint = null
+		if start.row == 0:
+			off_grid = TriPoint.new(start.pos + Vector2.UP * TRI_HEIGHT, 0, 0)
+			off_grid.downstream = off_grid
+		
+		flow_from(start.col, start.row, START_DEPTH, off_grid)
+		# Remove some random sources depending on density
+		sources.shuffle()
+		for dumps in range(0, (1.0 - DENSITY) * sources.size()):
+			sources.pop_back()
 	
 	func flow_from(col : int, row : int, depth : float, downstream = null):
 		# Recursive algorithm to visit unvisited points via connections
@@ -107,8 +128,6 @@ class TriGrid:
 	func draw_flows(canvas : CanvasItem, color : Color):
 		# Attempt to draw river curves
 		for source in sources:
-			if randf() > DENSITY:
-				continue
 			var point : TriPoint = source
 			var last_pos : Vector2 = point.pos
 			while true:
@@ -138,7 +157,7 @@ class TriGrid:
 				end_angle -= 2 * PI
 			if (end_angle - start_angle) < -PI:
 				end_angle += 2 * PI
-			canvas.draw_arc(center, RADIUS * 1.125, start_angle, end_angle, RADIUS * 1.25, color, line_width)
+			canvas.draw_arc(center, RADIUS, start_angle, end_angle, RADIUS * 2, color, line_width)
 		else:
 			# Open obtuse equalateral curve
 			var center : Vector2 = a + (c - b)
@@ -149,12 +168,11 @@ class TriGrid:
 				end_angle -= 2 * PI
 			if (end_angle - start_angle) < -PI:
 				end_angle += 2 * PI
-			canvas.draw_arc(center, TRI_HEIGHT, start_angle, end_angle, 20, color, line_width)
+			canvas.draw_arc(center, TRI_HEIGHT, start_angle, end_angle, TRI_HEIGHT * 2, color, line_width)
 
 func _ready():
-	seed(1)
+	seed(RANDOM_SEED)
 	grid = TriGrid.new(width, height)
-	grid.flow_from(0, 6, START_DEPTH)
 	
 func _draw():
 	grid.draw_flows(self, Color(0.0, 0.5, 1.0, 1.0))
