@@ -34,34 +34,34 @@ class BuildingPool:
 		var img = Image.new()
 		img.create(8, 16, false, Image.FORMAT_RGBA8)
 		img.fill(Color.aqua)
-		buildings.append(Building.new(img, 100))
+		buildings.append(Building.new(img, 200))
 		
 		img = Image.new()
 		img.create(16, 8, false, Image.FORMAT_RGBA8)
 		img.fill(Color.aquamarine)
-		buildings.append(Building.new(img, 100))
+		buildings.append(Building.new(img, 200))
 		
 		# Some middle sized buildings
 		img = Image.new()
 		img.create(24, 16, false, Image.FORMAT_RGBA8)
 		img.fill(Color.brown)
-		buildings.append(Building.new(img, 30))
+		buildings.append(Building.new(img, 60))
 		
 		img = Image.new()
 		img.create(16, 24, false, Image.FORMAT_RGBA8)
 		img.fill(Color.chocolate)
-		buildings.append(Building.new(img, 30))
+		buildings.append(Building.new(img, 60))
 		
 		# A few big buildings
 		img = Image.new()
 		img.create(24, 32, false, Image.FORMAT_RGBA8)
 		img.fill(Color.fuchsia)
-		buildings.append(Building.new(img, 10))
+		buildings.append(Building.new(img, 20))
 		
 		img = Image.new()
 		img.create(32, 24, false, Image.FORMAT_RGBA8)
 		img.fill(Color.crimson)
-		buildings.append(Building.new(img, 10))
+		buildings.append(Building.new(img, 20))
 		
 		# Unique buildings
 		img = Image.new()
@@ -132,7 +132,7 @@ class RoadWorker:
 		image.set_pixelv(pos, col)
 		image.unlock()
 		
-		# Have we gone far enough to do something else?
+		# Have we gone far enough to do something on the left?
 		if left_block_dis <= 0:
 			var left_dir := dir.tangent()
 			var forward_left_dir := left_dir + dir
@@ -156,18 +156,45 @@ class RoadWorker:
 				var plot_bounds := Rect2(near_corner, size).abs()
 				if plot_is_clear(image, plot_bounds, BACK_GROUND):
 					# Draw image
-					image.blit_rect(building.image, Rect2(Vector2(), size), plot_bounds.position)
+					image.blit_rect(building.image, Rect2(Vector2(), building.size), plot_bounds.position)
 					left_just_split = false
-					var frontage : int = Vector2(size.x * dir.x, size.y * dir.y).length()
+					var frontage : int = Vector2(building.size.x * dir.x, building.size.y * dir.y).length()
 					left_block_dis = frontage
 				else:
 					building_pool.push_building(building)
 					left_block_dis = 1
-				
 			
-		
-#			worker_list.append(RoadWorker.new(pos, dir.tangent().reflect(dir), col.lightened(0.1), dis)) # Right
-		
+		# Have we gone far enough to do something on the right?
+		if right_block_dis <= 0:
+			var right_dir := dir.tangent().reflect(dir)
+			var forward_right_dir := right_dir + dir
+			
+			# Add building, or make road?
+			if not right_just_split and randi() % BUILD_CHANCE == 0:
+				# Road
+				worker_list.append(RoadWorker.new(pos, right_dir, col, dis))
+				right_just_split = true
+				right_block_dis = 1
+			else:
+				# Get a building
+				var building = building_pool.pop_building()
+				if building == null:
+					# No buildings left, stop travelling
+					return false
+				
+				# See if we can place it
+				var near_corner : Vector2 = pos + right_dir
+				var size := Vector2(forward_right_dir.x * building.size.x, forward_right_dir.y * building.size.y)
+				var plot_bounds := Rect2(near_corner, size).abs()
+				if plot_is_clear(image, plot_bounds, BACK_GROUND):
+					# Draw image
+					image.blit_rect(building.image, Rect2(Vector2(), building.size), plot_bounds.position)
+					right_just_split = false
+					var frontage : int = Vector2(building.size.x * dir.x, building.size.y * dir.y).length()
+					right_block_dis = frontage
+				else:
+					building_pool.push_building(building)
+					right_block_dis = 1
 		
 		return true
 
