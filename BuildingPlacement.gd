@@ -153,6 +153,10 @@ class RoadWorker:
 				# See if we can place it
 				var near_corner : Vector2 = pos + left_dir
 				var size := Vector2(forward_left_dir.x * building.size.x, forward_left_dir.y * building.size.y)
+				if size.x < 0:
+					size.x += 1
+				if size.y < 0:
+					size.y += 1
 				var plot_bounds := Rect2(near_corner, size).abs()
 				if plot_is_clear(image, plot_bounds, BACK_GROUND):
 					# Draw image
@@ -185,6 +189,10 @@ class RoadWorker:
 				# See if we can place it
 				var near_corner : Vector2 = pos + right_dir
 				var size := Vector2(forward_right_dir.x * building.size.x, forward_right_dir.y * building.size.y)
+				if size.x < 0:
+					size.x += 1
+				if size.y < 0:
+					size.y += 1
 				var plot_bounds := Rect2(near_corner, size).abs()
 				if plot_is_clear(image, plot_bounds, BACK_GROUND):
 					# Draw image
