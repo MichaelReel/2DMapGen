@@ -31,48 +31,17 @@ class BuildingPool:
 		# Generate config
 		
 		# Many small buildings
-		var img = Image.new()
-		img.create(8, 16, false, Image.FORMAT_RGBA8)
-		img.fill(Color.aqua)
-		buildings.append(Building.new(img, 200))
-		
-		img = Image.new()
-		img.create(16, 8, false, Image.FORMAT_RGBA8)
-		img.fill(Color.aquamarine)
-		buildings.append(Building.new(img, 200))
-		
+		buildings.append(Building.new(building_outline(8, 16, Color.aqua), 200))
+		buildings.append(Building.new(building_outline(16, 8, Color.aquamarine), 200))
 		# Some middle sized buildings
-		img = Image.new()
-		img.create(24, 16, false, Image.FORMAT_RGBA8)
-		img.fill(Color.brown)
-		buildings.append(Building.new(img, 60))
-		
-		img = Image.new()
-		img.create(16, 24, false, Image.FORMAT_RGBA8)
-		img.fill(Color.chocolate)
-		buildings.append(Building.new(img, 60))
-		
+		buildings.append(Building.new(building_outline(24, 16, Color.brown), 60))
+		buildings.append(Building.new(building_outline(16, 24, Color.chocolate), 60))
 		# A few big buildings
-		img = Image.new()
-		img.create(24, 32, false, Image.FORMAT_RGBA8)
-		img.fill(Color.fuchsia)
-		buildings.append(Building.new(img, 20))
-		
-		img = Image.new()
-		img.create(32, 24, false, Image.FORMAT_RGBA8)
-		img.fill(Color.crimson)
-		buildings.append(Building.new(img, 20))
-		
+		buildings.append(Building.new(building_outline(24, 32, Color.fuchsia), 20))
+		buildings.append(Building.new(building_outline(32, 24, Color.crimson), 20))
 		# Unique buildings
-		img = Image.new()
-		img.create(24, 24, false, Image.FORMAT_RGBA8)
-		img.fill(Color.blue)
-		buildings.append(Building.new(img, 1))
-		
-		img = Image.new()
-		img.create(16, 16, false, Image.FORMAT_RGBA8)
-		img.fill(Color.blue)
-		buildings.append(Building.new(img, 1))
+		buildings.append(Building.new(building_outline(24, 24, Color.blue), 1))
+		buildings.append(Building.new(building_outline(16, 16, Color.blue), 1))
 	
 	func pop_building() -> Building:
 		if buildings.size() <= 0:
@@ -89,6 +58,26 @@ class BuildingPool:
 		building.limit += 1
 		if building.limit == 1:
 			buildings.append(building)
+
+	static func building_outline(w : int, h : int, color : Color) -> Image:
+		var img = Image.new()
+		img = Image.new()
+		img.create(w, h, false, Image.FORMAT_RGBA8)
+		img.fill(color)
+		var light_shade = color.lightened(0.2)
+		var dark_shade = color.darkened(0.2)
+		img.lock()
+		
+		for y in range(0, h):
+			img.set_pixel(0, y, light_shade)
+			img.set_pixel(w - 1, y, dark_shade)
+				
+		for x in range(0, w):
+			img.set_pixel(x, 0, light_shade)
+			img.set_pixel(x, h - 1, dark_shade)
+		
+		img.unlock()
+		return img
 		
 
 class RoadWorker:
