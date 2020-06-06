@@ -27,9 +27,6 @@ class BuildingPool:
 		buildings = []
 	
 	func create():
-		# (Probably want some config loading if using this for real)
-		# Generate config
-		
 		# Many small buildings
 		buildings.append(Building.new(building_outline(8, 16, Color.aqua), 200))
 		buildings.append(Building.new(building_outline(16, 8, Color.aquamarine), 200))
@@ -64,14 +61,13 @@ class BuildingPool:
 		img = Image.new()
 		img.create(w, h, false, Image.FORMAT_RGBA8)
 		img.fill(color)
-		var light_shade = color.lightened(0.2)
-		var dark_shade = color.darkened(0.2)
+		var light_shade = color.lightened(0.3)
+		var dark_shade = color.darkened(0.3)
 		img.lock()
 		
 		for y in range(0, h):
 			img.set_pixel(0, y, light_shade)
 			img.set_pixel(w - 1, y, dark_shade)
-				
 		for x in range(0, w):
 			img.set_pixel(x, 0, light_shade)
 			img.set_pixel(x, h - 1, dark_shade)
@@ -84,17 +80,17 @@ class RoadWorker:
 	var pos : Vector2
 	var dir : Vector2
 	var col : Color
-	var dis : int
+	var road_width : int
 	var left_block_dis : int = 0
 	var right_block_dis : int = 0
 	var left_just_split : bool
 	var right_just_split : bool
 	
-	func _init(start : Vector2, direction : Vector2, color : Color, distance : int = 0):
+	func _init(start : Vector2, direction : Vector2, color : Color, rw : int = 1):
 		pos = start
 		dir = direction
 		col = color
-		dis = distance
+		road_width = rw
 		left_block_dis = 0
 		right_block_dis = 0
 		left_just_split = true
@@ -102,7 +98,6 @@ class RoadWorker:
 		
 	func travel_forward(image : Image, worker_list : Array, building_pool : BuildingPool) -> bool:
 		pos += dir
-		dis += 1
 		left_block_dis -= 1
 		right_block_dis -= 1
 		
@@ -111,6 +106,8 @@ class RoadWorker:
 		if not bounds.has_point(pos):
 			return false
 		
+		var left_dir := dir.tangent()
+		var right_dir := left_dir.reflect(dir)
 		
 		image.lock()
 		# Have we encountered an existing road/building?
@@ -118,20 +115,29 @@ class RoadWorker:
 			return false
 		
 		# Lay down some road
-		image.set_pixelv(pos, col)
+		if dir.x != 0:
+			# horizontal road
+			for y in range(pos.y, pos.y + dir.x * road_width, dir.x):
+				image.set_pixel(pos.x, y, col)
+		elif dir.y != 0:
+			# Vertical road
+			for x in range(pos.x, pos.x - dir.y * road_width, -dir.y):
+				image.set_pixel(x, pos.y, col)
+		
+		
 		image.unlock()
 		
 		# Have we gone far enough to do something on the left?
 		if left_block_dis <= 0:
-			var left_dir := dir.tangent()
 			var forward_left_dir := left_dir + dir
 			
 			# Add building, or make road?
 			if not left_just_split and randi() % BUILD_CHANCE == 0:
 				# Road
-				worker_list.append(RoadWorker.new(pos, left_dir, col, dis))
+				var new_road_width = max(road_width - 1, 1)
+				worker_list.append(RoadWorker.new(pos, left_dir, col, new_road_width))
 				left_just_split = true
-				left_block_dis = 1
+				left_block_dis = new_road_width
 			else:
 				# Get a building
 				var building = building_pool.pop_building()
@@ -159,15 +165,15 @@ class RoadWorker:
 			
 		# Have we gone far enough to do something on the right?
 		if right_block_dis <= 0:
-			var right_dir := dir.tangent().reflect(dir)
 			var forward_right_dir := right_dir + dir
 			
 			# Add building, or make road?
 			if not right_just_split and randi() % BUILD_CHANCE == 0:
 				# Road
-				worker_list.append(RoadWorker.new(pos, right_dir, col, dis))
+				var new_road_width = max(road_width - 1, 1)
+				worker_list.append(RoadWorker.new(pos + (right_dir * (road_width - 1)), right_dir, col, new_road_width))
 				right_just_split = true
-				right_block_dis = 1
+				right_block_dis = new_road_width
 			else:
 				# Get a building
 				var building = building_pool.pop_building()
@@ -176,7 +182,7 @@ class RoadWorker:
 					return false
 				
 				# See if we can place it
-				var near_corner : Vector2 = pos + right_dir
+				var near_corner : Vector2 = pos + (right_dir * road_width)
 				var size := Vector2(forward_right_dir.x * building.size.x, forward_right_dir.y * building.size.y)
 				if size.x < 0:
 					size.x += 1
@@ -222,14 +228,17 @@ func _ready():
 	building_pool.create()
 	
 	var road := Color(0.1, 0.1, 0.1, 1.0)
-	var start = Vector2(width / 2, height / 2)
+	var start := Vector2(width / 2, height / 2)
+	var start_road_width := 4
 
 	image.fill(BACK_GROUND)
 	
-	road_workers.append(RoadWorker.new(start, Vector2.UP, road))
-	road_workers.append(RoadWorker.new(start, Vector2.RIGHT, road))
-	road_workers.append(RoadWorker.new(start, Vector2.LEFT, road))
-	road_workers.append(RoadWorker.new(start, Vector2.DOWN, road))
+	var half_road := start_road_width / 4
+	
+	road_workers.append(RoadWorker.new(start + (Vector2.UP + Vector2.LEFT) * (half_road + 1), Vector2.UP, road, start_road_width))
+	road_workers.append(RoadWorker.new(start + (Vector2.RIGHT + Vector2.UP) * half_road + Vector2.UP, Vector2.RIGHT, road, start_road_width))
+	road_workers.append(RoadWorker.new(start + (Vector2.DOWN + Vector2.RIGHT) * half_road, Vector2.DOWN, road, start_road_width))
+	road_workers.append(RoadWorker.new(start + (Vector2.LEFT + Vector2.DOWN) * half_road + Vector2.LEFT, Vector2.LEFT, road, start_road_width))
 	
 	ready = true
 
