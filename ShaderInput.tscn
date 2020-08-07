@@ -1,0 +1,58 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://ShaderInput.gd" type="Script" id=1]
+[ext_resource path="res://icon.png" type="Texture" id=2]
+
+[sub_resource type="VisualShaderNodeVec3Uniform" id=4]
+uniform_name = "Mouse"
+
+[sub_resource type="VisualShader" id=2]
+code = "shader_type canvas_item;
+uniform vec3 Mouse;
+
+
+
+void vertex() {
+// VectorUniform:2
+	vec3 n_out2p0 = Mouse;
+
+// Output:0
+	COLOR.rgb = n_out2p0;
+
+}
+
+void fragment() {
+// Output:0
+
+}
+
+void light() {
+// Output:0
+
+}
+"
+custom_defines = ""
+graph_offset = Vector2( -407.082, 0 )
+mode = 1
+flags/light_only = false
+nodes/vertex/0/position = Vector2( 400, 140 )
+nodes/vertex/2/node = SubResource( 4 )
+nodes/vertex/2/position = Vector2( -60, 160 )
+nodes/vertex/connections = PoolIntArray( 2, 0, 0, 2 )
+nodes/fragment/0/position = Vector2( 40, 40 )
+
+[sub_resource type="ShaderMaterial" id=3]
+shader = SubResource( 2 )
+shader_param/Mouse = null
+
+[node name="ShaderInput" type="TextureRect"]
+material = SubResource( 3 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = 2.0
+texture = ExtResource( 2 )
+stretch_mode = 1
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
