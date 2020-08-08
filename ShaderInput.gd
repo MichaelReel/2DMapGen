@@ -1,12 +1,12 @@
 extends TextureRect
 
 const COOL_DOWN : float = 1.000
-const ZOOM_SPEED : float = 0.1
-const ZOOM_MAX : float = 1.5
+const ZOOM_SPEED : float = 0.05
+const ZOOM_MAX : float = 1.3
 const ZOOM_MIN : float = ZOOM_SPEED
 
 var cool_down := COOL_DOWN
-var zoom := 1.0
+var zoom := 0.4
 
 func _process(delta):
 	# Get shader properties
