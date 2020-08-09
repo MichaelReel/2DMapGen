@@ -1,8 +1,8 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://BuildingPlacement.gd" type="Script" id=1]
+[ext_resource path="res://PixelDrawn/OpenSimplex.gd" type="Script" id=1]
 
-[node name="BuildingPlacement" type="TextureRect"]
+[node name="OpenSimplex" type="TextureRect"]
 margin_right = 1024.0
 margin_bottom = 600.0
 script = ExtResource( 1 )

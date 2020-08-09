@@ -1,8 +1,8 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://ModifiedWorley.gd" type="Script" id=1]
+[ext_resource path="res://PixelDrawn/RoadGrid.gd" type="Script" id=1]
 
-[node name="ModifiedWorley" type="TextureRect"]
+[node name="RoadGrid" type="TextureRect"]
 margin_right = 1024.0
 margin_bottom = 600.0
 script = ExtResource( 1 )

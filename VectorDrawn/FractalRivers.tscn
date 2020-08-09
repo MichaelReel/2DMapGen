@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://FractalRivers.gd" type="Script" id=1]
+[ext_resource path="res://VectorDrawn/FractalRivers.gd" type="Script" id=1]
 
 [node name="FractalRivers" type="TextureRect"]
 margin_left = 10.0

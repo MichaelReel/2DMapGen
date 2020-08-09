@@ -16,7 +16,7 @@ _global_script_class_icons={
 [application]
 
 config/name="2DMapGen_2020"
-run/main_scene="res://ImageGenerator.tscn"
+run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
 
 [rendering]

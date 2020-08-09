@@ -1,40 +1,40 @@
 [gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://icon.png" type="Texture" id=1]
-[ext_resource path="res://ShaderInput.gd" type="Script" id=2]
+[ext_resource path="res://ShaderDrawn/ShaderInput.gd" type="Script" id=2]
 
-[sub_resource type="VisualShaderNodeTexture" id=10]
+[sub_resource type="VisualShaderNodeTexture" id=1]
 source = 2
 texture = ExtResource( 1 )
 
-[sub_resource type="VisualShaderNodeInput" id=11]
+[sub_resource type="VisualShaderNodeInput" id=2]
 output_port_for_preview = 0
 input_name = "uv"
 
-[sub_resource type="VisualShaderNodeVectorOp" id=13]
+[sub_resource type="VisualShaderNodeVectorOp" id=3]
 operator = 2
 
-[sub_resource type="VisualShaderNodeScalarUniform" id=15]
+[sub_resource type="VisualShaderNodeScalarUniform" id=4]
 uniform_name = "Zoom"
 
-[sub_resource type="VisualShaderNodeSwitch" id=16]
+[sub_resource type="VisualShaderNodeSwitch" id=5]
 
-[sub_resource type="VisualShaderNodeCompare" id=17]
+[sub_resource type="VisualShaderNodeCompare" id=6]
 function = 3
 
-[sub_resource type="VisualShaderNodeVectorCompose" id=18]
+[sub_resource type="VisualShaderNodeVectorCompose" id=7]
 
-[sub_resource type="VisualShaderNodeVec3Uniform" id=1]
+[sub_resource type="VisualShaderNodeVec3Uniform" id=8]
 uniform_name = "Mouse"
 
-[sub_resource type="VisualShaderNodeScalarOp" id=19]
+[sub_resource type="VisualShaderNodeScalarOp" id=9]
 default_input_values = [ 0, 1.0, 1, 0.0 ]
 operator = 1
 
-[sub_resource type="VisualShaderNodeVectorDistance" id=7]
+[sub_resource type="VisualShaderNodeVectorDistance" id=10]
 output_port_for_preview = 0
 
-[sub_resource type="VisualShader" id=5]
+[sub_resource type="VisualShader" id=11]
 code = "shader_type canvas_item;
 uniform float Zoom;
 uniform vec3 Mouse;
@@ -108,35 +108,35 @@ graph_offset = Vector2( 0, -200.34 )
 mode = 1
 flags/light_only = false
 nodes/fragment/0/position = Vector2( 1220, 0 )
-nodes/fragment/2/node = SubResource( 1 )
+nodes/fragment/2/node = SubResource( 8 )
 nodes/fragment/2/position = Vector2( -20, 60 )
-nodes/fragment/8/node = SubResource( 7 )
+nodes/fragment/8/node = SubResource( 10 )
 nodes/fragment/8/position = Vector2( 200, 240 )
-nodes/fragment/11/node = SubResource( 10 )
+nodes/fragment/11/node = SubResource( 1 )
 nodes/fragment/11/position = Vector2( 540, -120 )
-nodes/fragment/12/node = SubResource( 11 )
+nodes/fragment/12/node = SubResource( 2 )
 nodes/fragment/12/position = Vector2( 40, -160 )
-nodes/fragment/14/node = SubResource( 13 )
+nodes/fragment/14/node = SubResource( 3 )
 nodes/fragment/14/position = Vector2( 980, -140 )
-nodes/fragment/16/node = SubResource( 15 )
+nodes/fragment/16/node = SubResource( 4 )
 nodes/fragment/16/position = Vector2( 300, 0 )
-nodes/fragment/17/node = SubResource( 16 )
+nodes/fragment/17/node = SubResource( 5 )
 nodes/fragment/17/position = Vector2( 900, 200 )
-nodes/fragment/18/node = SubResource( 17 )
+nodes/fragment/18/node = SubResource( 6 )
 nodes/fragment/18/position = Vector2( 540, 100 )
-nodes/fragment/19/node = SubResource( 18 )
+nodes/fragment/19/node = SubResource( 7 )
 nodes/fragment/19/position = Vector2( 800, 440 )
-nodes/fragment/20/node = SubResource( 19 )
+nodes/fragment/20/node = SubResource( 9 )
 nodes/fragment/20/position = Vector2( 520, 360 )
 nodes/fragment/connections = PoolIntArray( 2, 0, 8, 1, 12, 0, 8, 0, 11, 0, 14, 0, 14, 0, 0, 0, 17, 0, 14, 1, 16, 0, 18, 0, 8, 0, 18, 1, 18, 0, 17, 0, 12, 0, 11, 0, 19, 0, 17, 1, 8, 0, 20, 1, 20, 0, 19, 0, 20, 0, 19, 1, 20, 0, 19, 2, 16, 0, 20, 0, 11, 1, 0, 1 )
 
-[sub_resource type="ShaderMaterial" id=6]
-shader = SubResource( 5 )
+[sub_resource type="ShaderMaterial" id=12]
+shader = SubResource( 11 )
 shader_param/Zoom = null
 shader_param/Mouse = null
 
 [node name="SpotLightShader" type="TextureRect"]
-material = SubResource( 6 )
+material = SubResource( 12 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 rect_scale = Vector2( 16, 9.4 )

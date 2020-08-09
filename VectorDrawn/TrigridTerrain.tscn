@@ -1,8 +1,9 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://WorleyNoise.gd" type="Script" id=1]
+[ext_resource path="res://VectorDrawn/TrigridTerrain.gd" type="Script" id=1]
 
-[node name="WorleyNoise" type="TextureRect"]
+
+[node name="TrigridTerrain" type="TextureRect"]
 margin_right = 1024.0
 margin_bottom = 600.0
 script = ExtResource( 1 )
