@@ -17,32 +17,12 @@ var cool_down := COOL_DOWN
 var zoom := 0.4
 
 func _ready():
-	var image1 = Image.new()
-	var err = image1.load(IMG1_PATH)
-	if err != OK:
-		print ("Image missing: " + IMG1_PATH + " - " + str(err))
-	
-#	var image2 = Image.new()
-#	err = image2.load(IMG2_PATH)
-#	if err != OK:
-#		print ("Image missing: " + IMG2_PATH + " - " + str(err))
-	
-	var texture1 = ImageTexture.new()
-	texture1.create_from_image(image1, 0)
-	
-#	var texture2 = ImageTexture.new()
-#	texture2.create_from_image(image2, 0)
-
-	# Upload the textures to shader
-	material.set_shader_param("grid", texture1)
 	material.set_shader_param("human", _get_data_texture())
-
 
 func _process(delta):
 	# Get shader properties
 	var mouse = get_global_mouse_position() / get_rect().size;
 	var mat : ShaderMaterial = material
-	
 	
 	# Set shader properties
 	mat.set_shader_param("Mouse", mouse)
