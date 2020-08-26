@@ -5,11 +5,6 @@ const ZOOM_SPEED : float = 0.05
 const ZOOM_MAX : float = 1.3
 const ZOOM_MIN : float = ZOOM_SPEED
 
-const POINT_SPACE : float = 0.1
-
-onready var POINTS_WIDE : int = int(1.0 / POINT_SPACE)
-onready var POINTS_TALL : int = int(1.0 / POINT_SPACE)
-
 const IMG1_PATH : String = "res://sample/grid.png"
 const IMG2_PATH : String = "res://sample/human.png"
 
@@ -17,25 +12,27 @@ var cool_down := COOL_DOWN
 var zoom := 0.4
 
 func _ready():
+	var mat : ShaderMaterial = material
+	
 	var image1 = Image.new()
 	var err = image1.load(IMG1_PATH)
 	if err != OK:
 		print ("Image missing: " + IMG1_PATH + " - " + str(err))
 	
-#	var image2 = Image.new()
-#	err = image2.load(IMG2_PATH)
-#	if err != OK:
-#		print ("Image missing: " + IMG2_PATH + " - " + str(err))
+	var image2 = Image.new()
+	err = image2.load(IMG2_PATH)
+	if err != OK:
+		print ("Image missing: " + IMG2_PATH + " - " + str(err))
 	
 	var texture1 = ImageTexture.new()
 	texture1.create_from_image(image1, 0)
 	
-#	var texture2 = ImageTexture.new()
-#	texture2.create_from_image(image2, 0)
+	var texture2 = ImageTexture.new()
+	texture2.create_from_image(image2, 0)
 
 	# Upload the textures to shader
 	material.set_shader_param("grid", texture1)
-	material.set_shader_param("human", _get_data_texture())
+	material.set_shader_param("human", texture2)
 
 
 func _process(delta):
@@ -64,24 +61,3 @@ func _gui_input(event : InputEvent):
 			if emb.get_button_index() == BUTTON_WHEEL_DOWN:
 				zoom = max(ZOOM_MIN, zoom - ZOOM_SPEED)
 		
-func _get_data_texture() -> ImageTexture:
-	var data := ImageTexture.new()
-	var img := Image.new()
-	var data_points := StreamPeerBuffer.new()
-	
-	img.create(POINTS_WIDE, POINTS_TALL, false, Image.FORMAT_RGF)
-	# Create initial array of points
-	for y_index in range(0, POINTS_TALL):
-		var y := range_lerp(y_index, 0, POINTS_TALL, 0, 1.0)
-		for x_index in range(0, POINTS_WIDE):
-			var x := range_lerp(x_index, 0, POINTS_WIDE, 0, 1.0)
-			var point_data := Vector2(x + randf() * POINT_SPACE, y + randf() * POINT_SPACE)
-			data_points.put_float(point_data.x)
-			data_points.put_float(point_data.y)
-			
-	var byte_count = data_points.get_available_bytes()
-	print (str(byte_count) + " bytes available")
-	img.create_from_data(POINTS_WIDE, POINTS_TALL, false, Image.FORMAT_RGF, data_points.data_array)
-	data.create_from_image(img, 0)
-	
-	return data
