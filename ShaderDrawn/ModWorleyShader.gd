@@ -5,7 +5,7 @@ const ZOOM_SPEED : float = 0.05
 const ZOOM_MAX : float = 1.3
 const ZOOM_MIN : float = ZOOM_SPEED
 
-const POINT_SPACE : float = 0.1
+const POINT_SPACE : float = 0.05
 
 onready var POINTS_WIDE : int = int(1.0 / POINT_SPACE)
 onready var POINTS_TALL : int = int(1.0 / POINT_SPACE)
