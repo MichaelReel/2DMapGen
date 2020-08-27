@@ -1,0 +1,103 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://icon.png" type="Texture" id=1]
+[ext_resource path="res://ShaderDrawn/WorleyShader.gd" type="Script" id=2]
+
+[sub_resource type="Shader" id=56]
+code = "shader_type canvas_item;
+uniform sampler2D TextureUniform;
+uniform sampler2D PointData;
+uniform float PointSpace;
+
+void fragment() {
+// Find the local data position on the input data
+	vec3 uv_origin = vec3(UV, 0.0);
+// Get data positions (offset by the PointSpace) around origin data
+	vec3 uv_px_0 = uv_origin + vec3(PointSpace, 0.00000, 0.00000);
+	vec3 uv_0_py = uv_origin + vec3(0.00000, PointSpace, 0.00000);
+	vec3 uv_px_py = uv_origin + vec3(PointSpace, PointSpace, 0.00000);
+	vec3 uv_px_ny = uv_origin + vec3(PointSpace, -PointSpace, 0.00000);
+	vec3 uv_nx_py = uv_origin + vec3(-PointSpace, PointSpace, 0.00000);
+	vec3 uv_nx_ny = uv_origin + vec3(-PointSpace, -PointSpace, 0.00000);
+	vec3 uv_nx_0 = uv_origin + vec3(-PointSpace, 0.00000, 0.00000);
+	vec3 uv_0_ny = uv_origin + vec3(0.00000, -PointSpace, 0.00000);
+
+// Get the value of input data at the position of the fragment
+	vec3 data_origin = texture(PointData, uv_origin.xy).rgb;
+// Get the values of the input data at the positions around the current frags data point
+	vec3 data_px_0 = texture(PointData, uv_px_0.xy).rgb;
+	vec3 data_0_py = texture(PointData, uv_0_py.xy).rgb;
+	vec3 data_px_py = texture(PointData, uv_px_py.xy).rgb;
+	vec3 data_px_ny = texture(PointData, uv_px_ny.xy).rgb;
+	vec3 data_nx_py = texture(PointData, uv_nx_py.xy).rgb;
+	vec3 data_nx_ny = texture(PointData, uv_nx_ny.xy).rgb;
+	vec3 data_nx_0 = texture(PointData, uv_nx_0.xy).rgb;
+	vec3 data_0_ny = texture(PointData, uv_0_ny.xy).rgb;
+
+// Distance between uv and origin data
+	float d_data_0_0 = distance(uv_origin, data_origin);
+// Distance between the current uv and the nearest data values
+	float d_data_px_0 = distance(uv_origin, data_px_0);
+	float d_data_0_py = distance(uv_origin, data_0_py);
+	float d_data_px_py = distance(uv_origin, data_px_py);
+	float d_data_px_ny = distance(uv_origin, data_px_ny);
+	float d_data_nx_py = distance(uv_origin, data_nx_py);
+	float d_data_nx_ny = distance(uv_origin, data_nx_ny);
+	float d_data_nx_0 = distance(uv_origin, data_nx_0);
+	float d_data_0_ny = distance(uv_origin, data_0_ny);
+
+// ScalarOp:56
+	float min_distance = d_data_0_0;
+	min_distance = min(min_distance, d_data_px_0);
+	min_distance = min(min_distance, d_data_0_py);
+	min_distance = min(min_distance, d_data_px_py);
+	min_distance = min(min_distance, d_data_px_ny);
+	min_distance = min(min_distance, d_data_nx_py);
+	min_distance = min(min_distance, d_data_nx_ny);
+	min_distance = min(min_distance, d_data_nx_0);
+	min_distance = min(min_distance, d_data_0_ny);
+
+// Check if the uv 'equals' (with tolerance) the data point for the origin section
+	float tolerance = 0.00100;
+	bool is_data_exact = (abs(0.00000 - d_data_0_0) < tolerance);
+
+// How 'bright' to make the final worley edges
+	float color_scale = 1.00000 / PointSpace;
+
+// Get the base gradient_component-scale color value
+	float gradient_component = color_scale * min_distance;
+	vec3 gradient = vec3(gradient_component, gradient_component, gradient_component);
+
+// Pick the gradient to nearest point, or the value for matching the point data
+	vec3 data_point_color = vec3(1.00000, 1.00000, 1.00000);
+	vec3 output_color;
+	if(is_data_exact)
+	{
+		output_color = data_point_color;
+	}
+	else
+	{
+		output_color = gradient;
+	}
+
+// Output
+	COLOR.rgb = output_color;
+
+}
+"
+custom_defines = ""
+
+[sub_resource type="ShaderMaterial" id=55]
+shader = SubResource( 56 )
+shader_param/PointSpace = null
+
+[node name="WorleyShader" type="TextureRect"]
+material = SubResource( 55 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 1 )
+stretch_mode = 1
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
