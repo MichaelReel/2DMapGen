@@ -16,21 +16,24 @@ void fragment() {
 // How 'bright' to make the final worley edges
 	float color_scale = 1.00000 / PointSpace;
 	
-	float distances[9];
+	float d_block;
 	float min_distance = 2.0;
 	for (int uv_y = -1; uv_y <= 1; uv_y++) {
 		for (int uv_x = -1; uv_x <= 1; uv_x++) {
 			int uv_i = (uv_y + 1) * 3 + uv_x + 1;
 			vec3 uv_offset = uv_origin + vec3(float(uv_x) * PointSpace, float(uv_y) * PointSpace, 0.00000);
 			vec3 data = texture(PointData, uv_offset.xy).rgb;
-			distances[uv_i] = distance(uv_origin, data);
-			min_distance = min(min_distance, distances[uv_i]);
+			float dist = distance(uv_origin, data);
+			if (uv_y == 0 && uv_x == 0) {
+				d_block = dist;
+			}
+			min_distance = min(min_distance, dist);
 		}
 	}
 
 // Check if the uv 'equals' (with tolerance) the data point for the origin section
 	float tolerance = 0.00100;
-	bool is_data_exact = (abs(0.00000 - distances[4]) < tolerance);
+	bool is_data_exact = (abs(0.00000 - d_block) < tolerance);
 
 // Get the base gradient_component-scale color value
 	float gradient_component = color_scale * min_distance;
@@ -39,12 +42,9 @@ void fragment() {
 // Pick the gradient to nearest point, or the value for matching the point data
 	vec3 data_point_color = vec3(1.00000, 1.00000, 1.00000);
 	vec3 output_color;
-	if(is_data_exact)
-	{
+	if(is_data_exact) {
 		output_color = data_point_color;
-	}
-	else
-	{
+	} else {
 		output_color = gradient;
 	}
 
