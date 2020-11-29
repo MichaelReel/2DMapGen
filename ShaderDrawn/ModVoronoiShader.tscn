@@ -1,0 +1,76 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://ShaderDrawn/ModVoronoiShader.gd" type="Script" id=1]
+[ext_resource path="res://icon.png" type="Texture" id=2]
+
+[sub_resource type="Shader" id=1]
+code = "shader_type canvas_item;
+uniform sampler2D TextureUniform;
+uniform sampler2D PointData;
+uniform sampler2D PointColor;
+uniform float PointSpace;
+
+void fragment() {
+// Find the local data position on the input data
+	vec2 uv_origin = UV;
+	
+// How 'bright' to make the final worley edges
+	float color_scale = 1.00000 / PointSpace;
+	
+	float d_block;
+	float min_distance = 2.0;
+	vec3 nearest_color = vec3(0.0, 0.0, 0.0);
+	
+	for (int uv_y = -1; uv_y <= 1; uv_y++) {
+		for (int uv_x = -1; uv_x <= 1; uv_x++) {
+			int uv_i = (uv_y + 1) * 3 + uv_x + 1;
+			vec2 uv_offset = uv_origin + vec2(float(uv_x) * PointSpace, float(uv_y) * PointSpace);
+			vec2 data = texture(PointData, uv_offset.xy).rg;
+			vec3 color = texture(PointColor, uv_offset.xy).rgb;
+			float dist = distance(uv_origin, data);
+			if (uv_y == 0 && uv_x == 0) {
+				d_block = dist;
+			}
+			if (dist < min_distance) {
+				nearest_color = color;
+			}
+			min_distance = min(min_distance, dist);
+		}
+	}
+
+// Check if the uv 'equals' (with tolerance) the data point for the origin section
+	float tolerance = 0.00100;
+	bool is_data_exact = (abs(0.00000 - d_block) < tolerance);
+
+// Get the base gradient_component-scale color value
+	vec3 gradient = nearest_color;
+
+// Pick the gradient to nearest point, or the value for matching the point data
+	vec3 data_point_color = vec3(1.00000, 1.00000, 1.00000) - nearest_color;
+	vec3 output_color;
+	if(is_data_exact) {
+		output_color = data_point_color;
+	} else {
+		output_color = gradient;
+	}
+
+// Output
+	COLOR.rgb = output_color;
+
+}
+"
+
+[sub_resource type="ShaderMaterial" id=2]
+shader = SubResource( 1 )
+shader_param/PointSpace = null
+
+[node name="ModVoronoiShader" type="TextureRect"]
+material = SubResource( 2 )
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 2 )
+stretch_mode = 1
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
