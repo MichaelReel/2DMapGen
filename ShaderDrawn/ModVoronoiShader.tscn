@@ -8,6 +8,7 @@ code = "shader_type canvas_item;
 uniform sampler2D TextureUniform;
 uniform sampler2D PointData;
 uniform sampler2D PointColor;
+uniform vec2 Mouse;
 uniform float PointSpace;
 
 void fragment() {
@@ -41,12 +42,22 @@ void fragment() {
 // Check if the uv 'equals' (with tolerance) the data point for the origin section
 	float tolerance = 0.00100;
 	bool is_data_exact = (abs(0.00000 - d_block) < tolerance);
+	vec3 data_point_color = vec3(1.00000, 1.00000, 1.00000) - nearest_color;
+	
+// If the mouse point is closer than a fixed point, treat as nearest point
+	if (distance(Mouse, UV) < tolerance) {
+		is_data_exact = true;
+		data_point_color = vec3(0.00000, 0.00000, 0.00000);
+	}
+	
+	if (distance(Mouse, UV) < min_distance) {
+		nearest_color = vec3(1.00000, 1.00000, 1.00000);
+	}
 
 // Get the base gradient_component-scale color value
 	vec3 gradient = nearest_color;
 
 // Pick the gradient to nearest point, or the value for matching the point data
-	vec3 data_point_color = vec3(1.00000, 1.00000, 1.00000) - nearest_color;
 	vec3 output_color;
 	if(is_data_exact) {
 		output_color = data_point_color;
@@ -62,6 +73,7 @@ void fragment() {
 
 [sub_resource type="ShaderMaterial" id=2]
 shader = SubResource( 1 )
+shader_param/Mouse = null
 shader_param/PointSpace = null
 
 [node name="ModVoronoiShader" type="TextureRect"]
