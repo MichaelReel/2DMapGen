@@ -4,7 +4,7 @@ const ZOOM_SPEED : float = 0.05
 const ZOOM_MAX : float = 1.3
 const ZOOM_MIN : float = ZOOM_SPEED
 
-const POINT_SPACE : float = 0.05
+const POINT_SPACE : float = 0.025
 
 onready var POINTS_WIDE : int = int(1.0 / POINT_SPACE)
 onready var POINTS_TALL : int = int(1.0 / POINT_SPACE)
@@ -36,7 +36,7 @@ func _gui_input(event : InputEvent):
 			if emb.get_button_index() == BUTTON_WHEEL_DOWN:
 				zoom = max(ZOOM_MIN, zoom - ZOOM_SPEED)
 
-func _get_data_texture(t : float) -> ImageTexture:
+func _get_data_texture(time : float) -> ImageTexture:
 	var data := ImageTexture.new()
 	var img := Image.new()
 	var data_points := StreamPeerBuffer.new()
@@ -50,8 +50,8 @@ func _get_data_texture(t : float) -> ImageTexture:
 		var y := range_lerp(y_index, 0, POINTS_TALL, 0, 1.0)
 		for x_index in range(0, POINTS_WIDE):
 			var x := range_lerp(x_index, 0, POINTS_WIDE, 0, 1.0)
-			data_points.put_float(x + noise.get_noise_2d(x_index + t, y_index) * POINT_SPACE)
-			data_points.put_float(y + noise.get_noise_2d(x_index, y_index + t) * POINT_SPACE)
+			data_points.put_float(x + noise.get_noise_2d(x_index + time, y_index) * POINT_SPACE)
+			data_points.put_float(y + noise.get_noise_2d(x_index, y_index + time) * POINT_SPACE)
 			
 	var byte_count = data_points.get_available_bytes()
 	img.create_from_data(POINTS_WIDE, POINTS_TALL, false, Image.FORMAT_RGF, data_points.data_array)
@@ -59,7 +59,7 @@ func _get_data_texture(t : float) -> ImageTexture:
 	
 	return data
 
-func _get_color_texture(t : float) -> ImageTexture:
+func _get_color_texture(time : float) -> ImageTexture:
 	var data := ImageTexture.new()
 	var img := Image.new()
 	var data_points := StreamPeerBuffer.new()
@@ -70,9 +70,9 @@ func _get_color_texture(t : float) -> ImageTexture:
 	# Create initial array of points
 	for y_index in range(0, POINTS_TALL):
 		for x_index in range(0, POINTS_WIDE):
-			data_points.put_float(noise.get_noise_2d(x_index + t, y_index + t) / 2.0 + 0.5)
-			data_points.put_float(noise.get_noise_2d(x_index + POINTS_WIDE, y_index + t) / 2.0 + 0.5)
-			data_points.put_float(noise.get_noise_2d(x_index - t, y_index + POINTS_TALL) / 2.0 + 0.5)
+			data_points.put_float(noise.get_noise_2d(x_index + time, y_index - time) / 2.0 + 0.5)
+			data_points.put_float(noise.get_noise_2d(x_index + POINTS_WIDE, y_index + time) / 2.0 + 0.5)
+			data_points.put_float(noise.get_noise_2d(x_index - time, y_index + POINTS_TALL) / 2.0 + 0.5)
 			
 	var byte_count = data_points.get_available_bytes()
 	img.create_from_data(POINTS_WIDE, POINTS_TALL, false, Image.FORMAT_RGBF, data_points.data_array)
