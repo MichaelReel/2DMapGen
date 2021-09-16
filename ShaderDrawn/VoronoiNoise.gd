@@ -70,9 +70,9 @@ func _get_color_texture(time : float) -> ImageTexture:
 	# Create initial array of points
 	for y_index in range(0, POINTS_TALL):
 		for x_index in range(0, POINTS_WIDE):
-			data_points.put_float(noise.get_noise_2d(x_index + time, y_index - time) / 2.0 + 0.5)
-			data_points.put_float(noise.get_noise_2d(x_index + POINTS_WIDE, y_index + time) / 2.0 + 0.5)
-			data_points.put_float(noise.get_noise_2d(x_index - time, y_index + POINTS_TALL) / 2.0 + 0.5)
+			data_points.put_float(noise.get_noise_2d(x_index + time, y_index - time) / 5.0 + 0.2)
+			data_points.put_float(noise.get_noise_2d(x_index + POINTS_WIDE, y_index + time) / 3.0 + 0.5)
+			data_points.put_float(noise.get_noise_2d(x_index - time, y_index + POINTS_TALL) / 5.0 + 0.3)
 			
 	var byte_count = data_points.get_available_bytes()
 	img.create_from_data(POINTS_WIDE, POINTS_TALL, false, Image.FORMAT_RGBF, data_points.data_array)
